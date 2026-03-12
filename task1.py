@@ -2,27 +2,31 @@ import cv2
 import numpy as np
 
 img = cv2.imread("practice2_src/Erica.jpg")
+if img is None:
+    print("File not found")
+    exit()
+
 img_reduce = cv2.resize(img, None, fx=0.5, fy=0.5)
 
 hsv = cv2.cvtColor(img_reduce, cv2.COLOR_BGR2HSV)
+
 h, s, v = cv2.split(hsv)
 
-h_new = (h.astype(np.int16) + 90) % 180
-h_new = h_new.astype(np.uint8)
+h_changed = (h.astype(np.int32) + 90)%180
+img_h = cv2.cvtColor(cv2.merge([h_changed.astype(np.uint8), s, v]), cv2.COLOR_HSV2BGR)
 
-s_new = np.clip(s.astype(np.float32) * 0.5, 0, 255).astype(np.uint8)
+s_changed = (s.astype(np.float32)*0.5).astype(np.uint8)
+img_s = cv2.cvtColor(cv2.merge([h, s_changed, v]), cv2.COLOR_HSV2BGR)
 
-v_new = np.clip(v.astype(np.float32) * 1.5, 0, 255).astype(np.uint8)
+v_changed = np.clip(v.astype(np.float32)*1.5, 0, 255).astype(np.uint8)
+img_v = cv2.cvtColor(cv2.merge([h, s, v_changed]), cv2.COLOR_HSV2BGR)
 
-hsv_final = cv2.merge([h_new, s_new, v_new])
-result_img = cv2.cvtColor(hsv_final, cv2.COLOR_HSV2BGR)
+top = np.hstack((img_reduce, img_h))  
+bottom = np.hstack((img_s, img_v))    
+combined = np.vstack((top, bottom))  
 
+cv2.imwrite("erica_image.jpg", combined)
+cv2.imshow("2024001130", combined)
 
-top = np.hstack((img_reduce, result_img))
-
-combined = np.vstack((top, top))
-
-cv2.imwrite("erica_new1.jpg", result_img)
-cv2.imshow("2024001130", result_img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
