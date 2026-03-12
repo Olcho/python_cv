@@ -1,0 +1,34 @@
+import cv2
+import numpy as np
+
+# 1. 이미지 로드 및 (a) 50% 리사이즈
+img = cv2.imread("practice2_src/Erica.jpg")
+img_reduce = cv2.resize(img, None, fx=0.5, fy=0.5)
+
+# (b) HSV 컬러 모델로 변환
+hsv = cv2.cvtColor(img_reduce, cv2.COLOR_BGR2HSV)
+h, s, v = cv2.split(hsv)
+
+# Hue 180도 변경 (OpenCV에서는 0~179 범위이므로 +90)
+h_changed = (h.astype(np.int32) + 90) % 180
+img_h = cv2.cvtColor(cv2.merge([h_changed.astype(np.uint8), s, v]), cv2.COLOR_HSV2BGR)
+
+# Saturation 50% 감소
+s_changed = (s.astype(np.float32) * 0.5).astype(np.uint8)
+img_s = cv2.cvtColor(cv2.merge([h, s_changed, v]), cv2.COLOR_HSV2BGR)
+
+# Value 50% 증가 (밝기 증가)
+v_changed = np.clip(v.astype(np.float32) * 1.5, 0, 255).astype(np.uint8)
+img_v = cv2.cvtColor(cv2.merge([h, s, v_changed]), cv2.COLOR_HSV2BGR)
+
+# (c) 2x2 이미지 병합 (원본, Hue변환 / Sat변환, Val변환)
+top = np.hstack((img_reduce, img_h))   # 위쪽: 원본 + Hue
+bottom = np.hstack((img_s, img_v))      # 아래쪽: Sat + Val
+combined = np.vstack((top, bottom))     # 최종 2x2 결합
+
+# 파일 저장 (이름: erica_new1.jpg)
+cv2.imwrite("erica_new1.jpg", combined)
+
+cv2.imshow("2024001130", combined)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
